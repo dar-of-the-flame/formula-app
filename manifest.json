@@ -1,0 +1,99 @@
+{
+  "name": "HSK 1-4 Помощник изучения китайского",
+  "short_name": "HSK Учитель",
+  "description": "Интерактивное приложение для изучения китайской лексики HSK 1-4 уровней",
+  "lang": "ru",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#ff9eb5",
+  "background_color": "#fef7ff",
+  "icons": [
+    {
+      "src": "icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity", "books"],
+  "shortcuts": [
+    {
+      "name": "Начать обучение",
+      "short_name": "Учить",
+      "description": "Начать изучение новых слов",
+      "url": "/?mode=learn"
+    },
+    {
+      "name": "Пройти тест",
+      "short_name": "Тест",
+      "description": "Пройти тест на знание слов",
+      "url": "/?mode=test"
+    },
+    {
+      "name": "Все слова",
+      "short_name": "Словарь",
+      "description": "Просмотреть все слова",
+      "url": "/?mode=all"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Главный экран приложения"
+    },
+    {
+      "src": "screenshot2.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Режим обучения с карточками"
+    }
+  ]
+}
