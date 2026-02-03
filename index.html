@@ -2,10 +2,28 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ff9eb5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="HSK Учитель">
+    
     <title>HSK 1-4 | Помощник изучения китайского</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Иконки для различных платформ -->
+    <link rel="icon" href="icon-128x128.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="icon-152x152.png">
+    
+    <!-- Стили -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <!-- Улучшенные шрифты для иероглифов -->
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;500;700;900&family=ZCOOL+QingKe+HuangYou&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
 </head>
@@ -46,7 +64,7 @@
                     </div>
                 </div>
                 
-                <!-- Прогресс оставлен, но переработан -->
+                <!-- Прогресс -->
                 <div class="progress-container">
                     <div class="progress-bar">
                         <div class="progress-fill" id="progressFill"></div>
@@ -376,6 +394,12 @@
         </div>
     </div>
 
+    <!-- Офлайн уведомление -->
+    <div id="offlineNotification" class="notification notification-warning hidden">
+        <i class="fas fa-wifi"></i>
+        <span>Вы работаете в офлайн-режиме</span>
+    </div>
+
     <!-- Скрипты -->
     <script src="data-hsk1.js"></script>
     <script src="data-hsk2.js"></script>
@@ -412,6 +436,51 @@
         // Проверяем структуру данных
         console.log('Первое слово:', hskWords[0]);
         console.log('Последнее слово:', hskWords[hskWords.length - 1]);
+        
+        // Проверяем поддержку Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(function(registration) {
+                        console.log('Service Worker зарегистрирован:', registration.scope);
+                        
+                        // Проверяем обновления Service Worker
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            console.log('Обнаружено обновление Service Worker');
+                            
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('Новая версия приложения доступна!');
+                                    // Можно показать уведомление пользователю
+                                    if (confirm('Доступна новая версия приложения. Обновить?')) {
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(function(error) {
+                        console.log('Ошибка регистрации Service Worker:', error);
+                    });
+            });
+        }
+        
+        // Проверяем онлайн/офлайн статус
+        window.addEventListener('online', () => {
+            document.getElementById('offlineNotification').classList.add('hidden');
+            console.log('Вы онлайн');
+        });
+        
+        window.addEventListener('offline', () => {
+            document.getElementById('offlineNotification').classList.remove('hidden');
+            console.log('Вы офлайн');
+        });
+        
+        // Инициализируем статус
+        if (!navigator.onLine) {
+            document.getElementById('offlineNotification').classList.remove('hidden');
+        }
     </script>
     <script src="script.js"></script>
 </body>
