@@ -36,7 +36,7 @@ const App = {
             
             learnTitle: 'Изучение новых слов',
             learnInstructions: 'Кликните на карточку, чтобы увидеть перевод и примеры. Используйте пробел для переворота карточки.',
-            cardHint: 'Кликните на карточку или нажмите пробел для переворота',
+            cardHint: 'Кликните на карточку для переворота',
             prev: 'Назад',
             flip: 'Перевернуть',
             learned: 'Выучено',
@@ -100,7 +100,7 @@ const App = {
             
             learnTitle: '学习新词汇',
             learnInstructions: '点击卡片查看翻译和例句。使用空格键翻转卡片。',
-            cardHint: '点击卡片或按空格键翻转',
+            cardHint: '点击卡片翻转',
             prev: '上一张',
             flip: '翻转',
             learned: '已学会',
@@ -496,12 +496,60 @@ const App = {
         // Управление карточками
         const flipCardBtn = document.getElementById('flipCard');
         if (flipCardBtn) {
-            flipCardBtn.addEventListener('click', () => this.flipCard());
+            flipCardBtn.remove(); // Удаляем кнопку переворота
         }
         
         const flashcard = document.getElementById('flashcard');
         if (flashcard) {
-            flashcard.addEventListener('click', () => this.flipCard());
+            let isFlipping = false;
+            let lastFlipTime = 0;
+            
+            const handleFlip = () => {
+                const now = Date.now();
+                
+                // Предотвращаем быстрые повторные клики (анти-дребезг)
+                if (isFlipping || (now - lastFlipTime) < 500) {
+                    return;
+                }
+                
+                isFlipping = true;
+                lastFlipTime = now;
+                
+                this.flipCard();
+                
+                // Сбрасываем флаг после завершения анимации
+                setTimeout(() => {
+                    isFlipping = false;
+                }, 600);
+            };
+            
+            // Для десктопов и мобильных с поддержкой клика
+            flashcard.addEventListener('click', handleFlip);
+            
+            // Для тач-устройств добавляем обработчик touchstart
+            flashcard.addEventListener('touchstart', (e) => {
+                // Предотвращаем масштабирование при двойном тапе
+                if (e.touches.length === 1) {
+                    const touch = e.touches[0];
+                    const rect = flashcard.getBoundingClientRect();
+                    
+                    // Проверяем, что тап внутри карточки
+                    if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+                        touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                        e.preventDefault();
+                        handleFlip();
+                    }
+                }
+            }, { passive: false });
+            
+            // Добавляем визуальную обратную связь для тача
+            flashcard.addEventListener('touchstart', () => {
+                flashcard.style.transform = 'scale(0.98)';
+            });
+            
+            flashcard.addEventListener('touchend', () => {
+                flashcard.style.transform = '';
+            });
         }
         
         const prevCardBtn = document.getElementById('prevCard');
@@ -923,7 +971,20 @@ const App = {
     flipCard() {
         const flashcard = document.getElementById('flashcard');
         if (flashcard) {
+            // Добавляем класс для анимации
+            flashcard.classList.add('flipping');
             flashcard.classList.toggle('flipped');
+            
+            // Удаляем класс после анимации
+            setTimeout(() => {
+                flashcard.classList.remove('flipping');
+            }, 600);
+            
+            // Визуальная обратная связь
+            flashcard.style.transform = 'scale(1.02)';
+            setTimeout(() => {
+                flashcard.style.transform = '';
+            }, 150);
         }
     },
 
@@ -1310,6 +1371,125 @@ const App = {
     }
 };
 
+// PWA Installation
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
+// Показываем кнопку установки при поддержке PWA
+window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('beforeinstallprompt event fired');
+    
+    // Предотвращаем автоматическое отображение промпта
+    e.preventDefault();
+    
+    // Сохраняем событие для отложенного использования
+    deferredPrompt = e;
+    
+    // Показываем кнопку установки
+    if (installBtn) {
+        installBtn.classList.remove('hidden');
+    }
+    
+    // Обновляем UI для информирования пользователя
+    if (App.state.language === 'ru') {
+        App.showNotification('Приложение можно установить на рабочий стол!', 'info');
+    } else {
+        App.showNotification('应用可以安装到桌面!', 'info');
+    }
+});
+
+// Обработчик клика на кнопке установки
+if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+        console.log('Install button clicked');
+        
+        if (!deferredPrompt) {
+            return;
+        }
+        
+        // Показываем промпт установки
+        deferredPrompt.prompt();
+        
+        // Ждем ответа пользователя
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to the install prompt: ${outcome}`);
+        
+        // Сбрасываем сохраненное событие
+        deferredPrompt = null;
+        
+        // Скрываем кнопку установки
+        installBtn.classList.add('hidden');
+    });
+}
+
+// Отслеживаем успешную установку
+window.addEventListener('appinstalled', () => {
+    console.log('PWA was installed');
+    deferredPrompt = null;
+    
+    if (installBtn) {
+        installBtn.classList.add('hidden');
+    }
+    
+    if (App.state.language === 'ru') {
+        App.showNotification('Приложение успешно установлено!', 'success');
+    } else {
+        App.showNotification('应用安装成功!', 'success');
+    }
+});
+
+// Проверяем, установлено ли приложение уже
+window.addEventListener('load', () => {
+    if (window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone ||
+        document.referrer.includes('android-app://')) {
+        console.log('App is running in standalone mode');
+        if (installBtn) {
+            installBtn.classList.add('hidden');
+        }
+    }
+});
+
+// Проверяем онлайн/офлайн статус
+window.addEventListener('online', () => {
+    document.getElementById('offlineNotification').classList.add('hidden');
+    console.log('Вы онлайн');
+});
+
+window.addEventListener('offline', () => {
+    document.getElementById('offlineNotification').classList.remove('hidden');
+    console.log('Вы офлайн');
+});
+
+// Инициализация Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(function(registration) {
+                console.log('Service Worker зарегистрирован:', registration.scope);
+                
+                // Проверяем обновления Service Worker
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    console.log('Обнаружено обновление Service Worker');
+                    
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            console.log('Новая версия приложения доступна!');
+                            // Можно показать уведомление пользователю
+                            if (confirm('Доступна новая версия приложения. Обновить?')) {
+                                window.location.reload();
+                            }
+                        }
+                    });
+                });
+            })
+            .catch(function(error) {
+                console.log('Ошибка регистрации Service Worker:', error);
+            });
+    });
+}
+
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', async () => {
     // Проверяем загрузку данных перед инициализацией
@@ -1326,6 +1506,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     console.log('Данные успешно загружены, инициализируем приложение...');
+    
+    // Инициализируем статус
+    if (!navigator.onLine) {
+        document.getElementById('offlineNotification').classList.remove('hidden');
+    }
     
     try {
         await App.init();
