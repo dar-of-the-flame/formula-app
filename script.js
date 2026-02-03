@@ -13,7 +13,8 @@ const App = {
         filteredWords: [],
         language: 'ru',
         theme: 'pink',
-        autoFlip: true
+        autoFlip: true,
+        db: null // Добавляем ссылку на базу данных
     },
 
     // Переводы интерфейса
@@ -147,20 +148,214 @@ const App = {
         }
     },
 
+    // Инициализация IndexedDB
+    async initIndexedDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open('hsk-assistant-db', 2);
+            
+            request.onerror = (event) => {
+                console.error('Ошибка открытия IndexedDB:', event.target.error);
+                reject(event.target.error);
+            };
+            
+            request.onsuccess = (event) => {
+                this.state.db = event.target.result;
+                console.log('IndexedDB успешно открыта');
+                resolve(this.state.db);
+            };
+            
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                
+                // Создаем хранилище для прогресса
+                if (!db.objectStoreNames.contains('progress')) {
+                    const progressStore = db.createObjectStore('progress', { keyPath: 'id' });
+                    console.log('Создано хранилище прогресса');
+                }
+                
+                // Создаем хранилище для настроек
+                if (!db.objectStoreNames.contains('settings')) {
+                    const settingsStore = db.createObjectStore('settings', { keyPath: 'id' });
+                    console.log('Создано хранилище настроек');
+                }
+                
+                // Создаем хранилище для тестов
+                if (!db.objectStoreNames.contains('tests')) {
+                    const testsStore = db.createObjectStore('tests', { keyPath: 'id' });
+                    console.log('Создано хранилище тестов');
+                }
+            };
+        });
+    },
+
+    // Сохранение прогресса в IndexedDB
+    async saveProgressToIndexedDB() {
+        if (!this.state.db) {
+            console.warn('IndexedDB не инициализирована, сохраняем в localStorage');
+            this.saveProgressToLocalStorage();
+            return;
+        }
+        
+        const data = {
+            id: 'user-progress',
+            learnedWords: {
+                1: Array.from(this.state.learnedWords[1]),
+                2: Array.from(this.state.learnedWords[2]),
+                3: Array.from(this.state.learnedWords[3]),
+                4: Array.from(this.state.learnedWords[4])
+            },
+            cardOrder: this.state.cardOrder,
+            currentCardIndex: this.state.currentCardIndex,
+            lastSaved: new Date().toISOString()
+        };
+        
+        return new Promise((resolve, reject) => {
+            const transaction = this.state.db.transaction(['progress'], 'readwrite');
+            const store = transaction.objectStore('progress');
+            const request = store.put(data);
+            
+            request.onsuccess = () => {
+                console.log('Прогресс сохранен в IndexedDB');
+                // Также сохраняем в localStorage как резервную копию
+                this.saveProgressToLocalStorage();
+                resolve();
+            };
+            
+            request.onerror = (event) => {
+                console.error('Ошибка сохранения в IndexedDB:', event.target.error);
+                // При ошибке сохраняем только в localStorage
+                this.saveProgressToLocalStorage();
+                reject(event.target.error);
+            };
+        });
+    },
+
+    // Загрузка прогресса из IndexedDB
+    async loadProgressFromIndexedDB() {
+        if (!this.state.db) {
+            console.warn('IndexedDB не инициализирована, загружаем из localStorage');
+            return this.loadProgressFromLocalStorage();
+        }
+        
+        return new Promise((resolve, reject) => {
+            const transaction = this.state.db.transaction(['progress'], 'readonly');
+            const store = transaction.objectStore('progress');
+            const request = store.get('user-progress');
+            
+            request.onsuccess = (event) => {
+                const data = event.target.result;
+                if (data) {
+                    console.log('Прогресс загружен из IndexedDB');
+                    
+                    if (data.learnedWords) {
+                        for (let level in data.learnedWords) {
+                            this.state.learnedWords[level] = new Set(data.learnedWords[level]);
+                        }
+                    }
+                    
+                    if (data.cardOrder && data.currentCardIndex !== undefined) {
+                        this.state.cardOrder = data.cardOrder;
+                        this.state.currentCardIndex = data.currentCardIndex;
+                    } else {
+                        this.state.cardOrder = this.getNewWords();
+                    }
+                    
+                    resolve(true);
+                } else {
+                    console.log('Нет данных в IndexedDB, пробуем localStorage');
+                    this.loadProgressFromLocalStorage();
+                    resolve(false);
+                }
+            };
+            
+            request.onerror = (event) => {
+                console.error('Ошибка загрузки из IndexedDB:', event.target.error);
+                // При ошибке загружаем из localStorage
+                this.loadProgressFromLocalStorage();
+                reject(event.target.error);
+            };
+        });
+    },
+
+    // Сохранение прогресса в localStorage (резервная копия)
+    saveProgressToLocalStorage() {
+        const data = {
+            learnedWords: {
+                1: Array.from(this.state.learnedWords[1]),
+                2: Array.from(this.state.learnedWords[2]),
+                3: Array.from(this.state.learnedWords[3]),
+                4: Array.from(this.state.learnedWords[4])
+            },
+            cardOrder: this.state.cardOrder,
+            currentCardIndex: this.state.currentCardIndex,
+            lastSaved: new Date().toISOString()
+        };
+        localStorage.setItem('hsk-progress', JSON.stringify(data));
+        console.log('Прогресс сохранен в localStorage');
+    },
+
+    // Загрузка прогресса из localStorage (резервная копия)
+    loadProgressFromLocalStorage() {
+        const saved = localStorage.getItem('hsk-progress');
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                if (data.learnedWords) {
+                    for (let level in data.learnedWords) {
+                        this.state.learnedWords[level] = new Set(data.learnedWords[level]);
+                    }
+                }
+                
+                if (data.cardOrder && data.currentCardIndex !== undefined) {
+                    this.state.cardOrder = data.cardOrder;
+                    this.state.currentCardIndex = data.currentCardIndex;
+                } else {
+                    this.state.cardOrder = this.getNewWords();
+                }
+                
+                console.log('Прогресс загружен из localStorage');
+                return true;
+            } catch (e) {
+                console.error('Ошибка загрузки из localStorage:', e);
+            }
+        }
+        
+        this.state.cardOrder = this.getNewWords();
+        return false;
+    },
+
     // Инициализация приложения
-    init() {
+    async init() {
         console.log('Инициализация приложения...');
         
-        this.loadSettings();
-        this.loadProgress();
-        this.setupEventListeners();
-        this.applyTheme();
-        this.applyLanguage();
-        this.render();
-        this.updateProgressBar();
-        
-        // Начальная загрузка всех слов
-        this.loadAllWords();
+        try {
+            // Инициализируем IndexedDB
+            await this.initIndexedDB();
+            
+            this.loadSettings();
+            await this.loadProgressFromIndexedDB();
+            this.setupEventListeners();
+            this.applyTheme();
+            this.applyLanguage();
+            this.render();
+            this.updateProgressBar();
+            
+            // Начальная загрузка всех слов
+            this.loadAllWords();
+            
+            console.log('Приложение успешно инициализировано');
+        } catch (error) {
+            console.error('Ошибка инициализации приложения:', error);
+            // Пробуем продолжить без IndexedDB
+            this.loadSettings();
+            this.loadProgressFromLocalStorage();
+            this.setupEventListeners();
+            this.applyTheme();
+            this.applyLanguage();
+            this.render();
+            this.updateProgressBar();
+            this.loadAllWords();
+        }
     },
 
     // Загрузка настроек из localStorage
@@ -212,48 +407,6 @@ const App = {
                 element.placeholder = translations[key];
             }
         });
-    },
-
-    // Загрузка прогресса из localStorage
-    loadProgress() {
-        const saved = localStorage.getItem('hsk-progress');
-        if (saved) {
-            try {
-                const data = JSON.parse(saved);
-                if (data.learnedWords) {
-                    for (let level in data.learnedWords) {
-                        this.state.learnedWords[level] = new Set(data.learnedWords[level]);
-                    }
-                }
-                
-                if (data.cardOrder && data.currentCardIndex !== undefined) {
-                    this.state.cardOrder = data.cardOrder;
-                    this.state.currentCardIndex = data.currentCardIndex;
-                } else {
-                    this.state.cardOrder = this.getNewWords();
-                }
-            } catch (e) {
-                console.error('Ошибка загрузки прогресса:', e);
-                this.state.cardOrder = this.getNewWords();
-            }
-        } else {
-            this.state.cardOrder = this.getNewWords();
-        }
-    },
-
-    // Сохранение прогресса в localStorage
-    saveProgress() {
-        const data = {
-            learnedWords: {
-                1: Array.from(this.state.learnedWords[1]),
-                2: Array.from(this.state.learnedWords[2]),
-                3: Array.from(this.state.learnedWords[3]),
-                4: Array.from(this.state.learnedWords[4])
-            },
-            cardOrder: this.state.cardOrder,
-            currentCardIndex: this.state.currentCardIndex
-        };
-        localStorage.setItem('hsk-progress', JSON.stringify(data));
     },
 
     // Получение слов для текущего уровня
@@ -802,7 +955,7 @@ const App = {
     },
 
     // Отметить как выученное
-    markAsLearned() {
+    async markAsLearned() {
         if (this.state.cardOrder.length > 0) {
             const wordId = this.state.cardOrder[this.state.currentCardIndex];
             const word = hskWords.find(w => w.id == wordId);
@@ -813,7 +966,12 @@ const App = {
                 }
                 
                 this.state.learnedWords[word.level].add(wordId);
-                this.saveProgress();
+                
+                try {
+                    await this.saveProgressToIndexedDB();
+                } catch (error) {
+                    console.error('Ошибка сохранения прогресса:', error);
+                }
                 
                 // Удаляем из текущего порядка
                 this.state.cardOrder = this.state.cardOrder.filter(id => id != wordId);
@@ -1003,11 +1161,37 @@ const App = {
         
         document.getElementById('resultMessage').textContent = message;
         
+        // Сохраняем результат теста в IndexedDB
+        this.saveTestResult(testData.correctAnswers, testData.words.length, percentage);
+        
         // Показываем результаты
         document.getElementById('testArea').classList.add('hidden');
         document.getElementById('testResults').classList.remove('hidden');
         
         this.state.testInProgress = false;
+    },
+
+    // Сохранить результат теста
+    async saveTestResult(correct, total, percentage) {
+        if (!this.state.db) return;
+        
+        const testResult = {
+            id: `test-${Date.now()}`,
+            date: new Date().toISOString(),
+            correctAnswers: correct,
+            totalQuestions: total,
+            percentage: percentage,
+            level: this.state.currentLevel
+        };
+        
+        try {
+            const transaction = this.state.db.transaction(['tests'], 'readwrite');
+            const store = transaction.objectStore('tests');
+            await store.add(testResult);
+            console.log('Результат теста сохранен в IndexedDB');
+        } catch (error) {
+            console.error('Ошибка сохранения результата теста:', error);
+        }
     },
 
     // Перезапустить тест
@@ -1127,7 +1311,7 @@ const App = {
 };
 
 // Инициализация приложения
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Проверяем загрузку данных перед инициализацией
     if (typeof hskWords === 'undefined') {
         console.error('Переменная hskWords не определена!');
@@ -1142,7 +1326,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     console.log('Данные успешно загружены, инициализируем приложение...');
-    App.init();
+    
+    try {
+        await App.init();
+    } catch (error) {
+        console.error('Ошибка инициализации приложения:', error);
+        // Пробуем инициализировать без IndexedDB
+        App.loadSettings();
+        App.loadProgressFromLocalStorage();
+        App.setupEventListeners();
+        App.applyTheme();
+        App.applyLanguage();
+        App.render();
+        App.updateProgressBar();
+        App.loadAllWords();
+    }
 });
 
 // Добавляем стили для уведомлений
@@ -1185,3 +1383,6 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Экспортируем App для отладки
+window.App = App;
