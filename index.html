@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSK 1-4 | Помощник изучения китайского</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Улучшенные шрифты для иероглифов -->
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;500;700;900&family=ZCOOL+QingKe+HuangYou&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+</head>
+<body class="theme-pink">
+    <div class="background-pattern">
+        <div class="decorative-circle circle-1"></div>
+        <div class="decorative-circle circle-2"></div>
+        <div class="decorative-circle circle-3"></div>
+        <div class="chinese-pattern pattern-1">学</div>
+        <div class="chinese-pattern pattern-2">习</div>
+        <div class="chinese-pattern pattern-3">汉</div>
+        <div class="chinese-pattern pattern-4">语</div>
+    </div>
+    
+    <div class="container">
+        <!-- Шапка с настройками -->
+        <header class="app-header">
+            <div class="logo-section">
+                <div class="chinese-logo">学汉语助手</div>
+                <h1 data-i18n="appTitle">Изучение HSK 1-4</h1>
+                <p class="subtitle" data-i18n="appSubtitle">Эффективное изучение китайской лексики</p>
+            </div>
+            
+            <div class="header-controls">
+                <!-- Кнопка настроек -->
+                <button id="settingsBtn" class="btn btn-settings">
+                    <i class="fas fa-cog"></i> <span data-i18n="settings">Настройки</span>
+                </button>
+                
+                <div class="level-selector">
+                    <h3 data-i18n="selectLevel">Выберите уровень:</h3>
+                    <div class="level-buttons">
+                        <button class="level-btn active" data-level="1">HSK 1</button>
+                        <button class="level-btn" data-level="2">HSK 2</button>
+                        <button class="level-btn" data-level="3">HSK 3</button>
+                        <button class="level-btn" data-level="4">HSK 4</button>
+                        <button class="level-btn" data-level="all" data-i18n="allLevels">Все</button>
+                    </div>
+                </div>
+                
+                <!-- Прогресс оставлен, но переработан -->
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <span id="progressText" data-i18n="progressDefault">Прогресс: 0/0 (0%)</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Меню режимов -->
+        <nav class="mode-nav">
+            <button class="mode-btn active" data-mode="learn">
+                <i class="fas fa-book-open"></i>
+                <span data-i18n="learnMode">Изучение</span>
+            </button>
+            <button class="mode-btn" data-mode="review">
+                <i class="fas fa-sync-alt"></i>
+                <span data-i18n="reviewMode">Повторение</span>
+            </button>
+            <button class="mode-btn" data-mode="test">
+                <i class="fas fa-pencil-alt"></i>
+                <span data-i18n="testMode">Тест</span>
+            </button>
+            <button class="mode-btn" data-mode="all">
+                <i class="fas fa-list"></i>
+                <span data-i18n="allWords">Все слова</span>
+            </button>
+        </nav>
+
+        <!-- Основной контент -->
+        <main class="content-area">
+            <!-- Экран изучения -->
+            <section id="learnMode" class="mode-content active">
+                <div class="mode-header">
+                    <h2><i class="fas fa-book-open"></i> <span data-i18n="learnTitle">Изучение новых слов</span></h2>
+                    <p data-i18n="learnInstructions">Кликните на карточку, чтобы увидеть перевод и примеры. Используйте пробел для переворота карточки.</p>
+                </div>
+                
+                <div class="flashcard-container">
+                    <!-- Счетчик карточек убран, оставлен только уровень -->
+                    <div class="current-level-display">
+                        <span class="level-badge" id="currentLevelBadge">HSK 1</span>
+                        <span class="hint" data-i18n="cardHint">Кликните или нажмите пробел для переворота</span>
+                    </div>
+                    
+                    <div class="flashcard" id="flashcard">
+                        <div class="card-front">
+                            <div class="character-large" id="currentCharacter">爱</div>
+                            <div class="pinyin-large" id="currentPinyin">ài</div>
+                        </div>
+                        <div class="card-back">
+                            <div class="character-large" id="backCharacter">爱</div>
+                            <div class="pinyin-large" id="backPinyin">ài</div>
+                            <div class="translation" id="currentTranslation">любить; любовь; любимый</div>
+                            <div class="example" id="currentExample"></div>
+                            <div class="word-level" id="currentWordLevel">HSK 1</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-controls">
+                        <button id="prevCard" class="btn btn-control">
+                            <i class="fas fa-chevron-left"></i> <span data-i18n="prev">Назад</span>
+                        </button>
+                        
+                        <div class="middle-controls">
+                            <button id="flipCard" class="btn btn-primary">
+                                <i class="fas fa-sync-alt"></i> <span data-i18n="flip">Перевернуть</span>
+                            </button>
+                            <button id="markLearned" class="btn btn-success">
+                                <i class="fas fa-check"></i> <span data-i18n="learned">Выучено</span>
+                            </button>
+                        </div>
+                        
+                        <button id="nextCard" class="btn btn-control">
+                            <span data-i18n="next">Вперед</span> <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="shuffle-control">
+                        <button id="shuffleCards" class="btn btn-secondary">
+                            <i class="fas fa-random"></i> <span data-i18n="shuffle">Перемешать карточки</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Экран повторения -->
+            <section id="reviewMode" class="mode-content">
+                <div class="mode-header">
+                    <h2><i class="fas fa-sync-alt"></i> <span data-i18n="reviewTitle">Повторение изученных слов</span></h2>
+                    <p data-i18n="reviewInstructions">Просмотрите слова, которые вы уже изучили.</p>
+                </div>
+                
+                <div class="review-controls">
+                    <div class="review-filters">
+                        <h3 data-i18n="filterByLevel">Фильтр по уровню:</h3>
+                        <div class="review-level-buttons">
+                            <button class="review-level-btn active" data-level="all" data-i18n="all">Все</button>
+                            <button class="review-level-btn" data-level="1">HSK 1</button>
+                            <button class="review-level-btn" data-level="2">HSK 2</button>
+                            <button class="review-level-btn" data-level="3">HSK 3</button>
+                            <button class="review-level-btn" data-level="4">HSK 4</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="review-container empty" id="reviewContainer">
+                    <div class="empty-state">
+                        <i class="fas fa-book-open"></i>
+                        <h3 data-i18n="noReviewWords">Нет слов для повторения</h3>
+                        <p data-i18n="reviewInstructions2">Изучите слова в режиме обучения, чтобы они появились здесь.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Экран тестирования -->
+            <section id="testMode" class="mode-content">
+                <div class="mode-header">
+                    <h2><i class="fas fa-pencil-alt"></i> <span data-i18n="testTitle">Проверка знаний</span></h2>
+                    <p data-i18n="testInstructions">Пройдите тест, чтобы проверить, насколько хорошо вы запомнили слова.</p>
+                </div>
+                
+                <div class="test-container">
+                    <div class="test-options" id="testOptions">
+                        <div class="option-group">
+                            <h3 data-i18n="selectLevelTest">Выберите уровень:</h3>
+                            <div class="test-level-buttons">
+                                <label class="radio-label">
+                                    <input type="radio" name="testLevel" value="all" checked>
+                                    <span class="radio-custom"></span>
+                                    <span data-i18n="allLevels">Все уровни</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="testLevel" value="1">
+                                    <span class="radio-custom"></span>
+                                    HSK 1
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="testLevel" value="2">
+                                    <span class="radio-custom"></span>
+                                    HSK 2
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="testLevel" value="3">
+                                    <span class="radio-custom"></span>
+                                    HSK 3
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="testLevel" value="4">
+                                    <span class="radio-custom"></span>
+                                    HSK 4
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="option-group">
+                            <h3 data-i18n="questionsCount">Количество вопросов:</h3>
+                            <select id="testQuestionCount" class="select-input">
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="30">30</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button id="startTest" class="btn btn-primary" style="width: 100%; padding: 20px; font-size: 20px;">
+                        <i class="fas fa-play"></i> <span data-i18n="startTest">Начать тест</span>
+                    </button>
+                    
+                    <div class="test-area hidden" id="testArea">
+                        <div class="test-header">
+                            <div class="test-progress">
+                                <div class="test-progress-bar">
+                                    <div class="test-progress-fill" id="testProgressFill"></div>
+                                </div>
+                                <div id="testProgressText" data-i18n="testProgress">Вопрос 0 из 0</div>
+                            </div>
+                            <div class="test-score" id="testScore">0/0</div>
+                        </div>
+                        
+                        <div class="test-question" id="testQuestion">
+                            <span id="testQuestionText">爱</span>
+                        </div>
+                        
+                        <div class="test-answers" id="testAnswers">
+                            <!-- Ответы будут здесь -->
+                        </div>
+                        
+                        <div class="test-feedback hidden" id="testFeedback">
+                            <!-- Обратная связь будет здесь -->
+                        </div>
+                        
+                        <div class="test-controls">
+                            <button id="nextQuestion" class="btn btn-primary hidden">
+                                <i class="fas fa-arrow-right"></i> <span data-i18n="nextQuestion">Следующий вопрос</span>
+                            </button>
+                            <button id="finishTest" class="btn btn-secondary hidden">
+                                <i class="fas fa-flag-checkered"></i> <span data-i18n="finishTest">Завершить тест</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="test-results hidden" id="testResults">
+                        <div class="result-score" id="resultScore">0%</div>
+                        <div class="result-message" id="resultMessage" data-i18n="testResultDefault">Результат теста</div>
+                        
+                        <div class="result-details">
+                            <div class="result-detail">
+                                <h4 data-i18n="correctAnswers">Правильных ответов</h4>
+                                <p id="correctCount">0</p>
+                            </div>
+                            <div class="result-detail">
+                                <h4 data-i18n="totalQuestions">Всего вопросов</h4>
+                                <p id="totalQuestions">0</p>
+                            </div>
+                            <div class="result-detail">
+                                <h4 data-i18n="percentage">Процент</h4>
+                                <p id="resultPercentage">0%</p>
+                            </div>
+                        </div>
+                        
+                        <button id="restartTest" class="btn btn-primary">
+                            <i class="fas fa-redo"></i> <span data-i18n="tryAgain">Пройти еще раз</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Экран всех слов -->
+            <section id="allMode" class="mode-content">
+                <div class="mode-header">
+                    <h2><i class="fas fa-list"></i> <span data-i18n="allWordsTitle">Все слова HSK 1-4</span></h2>
+                    <p data-i18n="allWordsInstructions">Просмотр всех слов с возможностью поиска и фильтрации.</p>
+                </div>
+                
+                <div class="filter-controls">
+                    <input type="text" id="wordSearch" class="search-input" placeholder="Поиск по иероглифу, пиньиню или переводу..." data-i18n-placeholder="searchPlaceholder">
+                    
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-level="all" data-i18n="all">Все</button>
+                        <button class="filter-btn" data-level="1">HSK 1</button>
+                        <button class="filter-btn" data-level="2">HSK 2</button>
+                        <button class="filter-btn" data-level="3">HSK 3</button>
+                        <button class="filter-btn" data-level="4">HSK 4</button>
+                    </div>
+                    
+                    <div class="sort-controls">
+                        <select id="sortBy" class="select-input">
+                            <option value="id" data-i18n="sortDefault">По умолчанию</option>
+                            <option value="char" data-i18n="sortCharacter">По иероглифу</option>
+                            <option value="pinyin" data-i18n="sortPinyin">По пиньиню</option>
+                            <option value="level" data-i18n="sortLevel">По уровню</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="words-grid" id="wordsGrid">
+                    <!-- Слова будут здесь -->
+                </div>
+                
+                <div class="pagination" id="pagination">
+                    <!-- Пагинация будет здесь -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Модальное окно настроек -->
+    <div class="modal hidden" id="settingsModal">
+        <div class="modal-content">
+            <h3><i class="fas fa-cog"></i> <span data-i18n="settings">Настройки</span></h3>
+            
+            <div class="settings-group">
+                <h4 data-i18n="interfaceLanguage">Язык интерфейса:</h4>
+                <div class="language-buttons">
+                    <button class="lang-btn active" data-lang="ru">
+                        <i class="fas fa-language"></i> Русский
+                    </button>
+                    <button class="lang-btn" data-lang="zh">
+                        <i class="fas fa-language"></i> 中文
+                    </button>
+                </div>
+            </div>
+            
+            <div class="settings-group">
+                <h4 data-i18n="colorTheme">Цветовая тема:</h4>
+                <div class="theme-buttons">
+                    <button class="theme-btn active" data-theme="pink">
+                        <div class="theme-preview pink-theme"></div>
+                        <span data-i18n="themePink">Розовая</span>
+                    </button>
+                    <button class="theme-btn" data-theme="blue">
+                        <div class="theme-preview blue-theme"></div>
+                        <span data-i18n="themeBlue">Голубая</span>
+                    </button>
+                    <button class="theme-btn" data-theme="green">
+                        <div class="theme-preview green-theme"></div>
+                        <span data-i18n="themeGreen">Зеленая</span>
+                    </button>
+                    <button class="theme-btn" data-theme="purple">
+                        <div class="theme-preview purple-theme"></div>
+                        <span data-i18n="themePurple">Фиолетовая</span>
+                    </button>
+                    <button class="theme-btn" data-theme="dark">
+                        <div class="theme-preview dark-theme"></div>
+                        <span data-i18n="themeDark">Темная</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="settings-group">
+                <h4 data-i18n="studySettings">Настройки изучения:</h4>
+                <div class="study-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="autoFlip" checked>
+                        <span class="checkbox-custom"></span>
+                        <span data-i18n="autoFlip">Автопереворот карточки (3 сек)</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button id="closeSettings" class="btn btn-secondary" data-i18n="close">Закрыть</button>
+                <button id="saveSettings" class="btn btn-primary" data-i18n="save">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Скрипты -->
+    <script src="data-hsk1.js"></script>
+    <script src="data-hsk2.js"></script>
+    <script src="data-hsk3.js"></script>
+    <script src="data-hsk4.js"></script>
+    <script>
+        // Добавляем уровень к каждому массиву слов
+        hsk1Words.forEach(word => {
+            word.level = 1;
+            if (!word.id) word.id = Math.floor(Math.random() * 1000000);
+        });
+        hsk2NewWords.forEach(word => {
+            word.level = 2;
+            if (!word.id) word.id = Math.floor(Math.random() * 1000000);
+        });
+        hsk3NewWords.forEach(word => {
+            word.level = 3;
+            if (!word.id) word.id = Math.floor(Math.random() * 1000000);
+        });
+        hsk4Words.forEach(word => {
+            word.level = 4;
+            if (!word.id) word.id = Math.floor(Math.random() * 1000000);
+        });
+        
+        // Объединяем все слова в один массив
+        const hskWords = [...hsk1Words, ...hsk2NewWords, ...hsk3NewWords, ...hsk4Words];
+        
+        console.log('Загружено слов:', hskWords.length);
+        console.log('HSK 1:', hsk1Words.length);
+        console.log('HSK 2:', hsk2NewWords.length);
+        console.log('HSK 3:', hsk3NewWords.length);
+        console.log('HSK 4:', hsk4Words ? hsk4Words.length : 'Не загружен');
+        
+        // Проверяем структуру данных
+        console.log('Первое слово:', hskWords[0]);
+        console.log('Последнее слово:', hskWords[hskWords.length - 1]);
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
