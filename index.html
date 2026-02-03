@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Изучение HSK 1 | 学中文</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="background-pattern"></div>
+    
+    <div class="container">
+        <!-- Шапка -->
+        <header class="app-header">
+            <div class="logo-section">
+                <div class="chinese-logo">学中文</div>
+                <h1>HSK 1 学习助手</h1>
+                <p class="subtitle">Изучай китайский с удовольствием</p>
+            </div>
+            <div class="header-controls">
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <span id="progressText">Прогресс: 0/150</span>
+                </div>
+                <button id="resetProgress" class="btn btn-secondary">
+                    <i class="fas fa-redo"></i> Сбросить прогресс
+                </button>
+            </div>
+        </header>
+
+        <!-- Меню режимов -->
+        <nav class="mode-nav">
+            <button class="mode-btn active" data-mode="learn">
+                <i class="fas fa-book-open"></i>
+                <span>Изучение</span>
+            </button>
+            <button class="mode-btn" data-mode="review">
+                <i class="fas fa-sync-alt"></i>
+                <span>Повторение</span>
+                <span class="badge" id="reviewCount">0</span>
+            </button>
+            <button class="mode-btn" data-mode="test">
+                <i class="fas fa-pencil-alt"></i>
+                <span>Тестирование</span>
+            </button>
+            <button class="mode-btn" data-mode="all">
+                <i class="fas fa-list"></i>
+                <span>Все слова</span>
+            </button>
+        </nav>
+
+        <!-- Основной контент -->
+        <main class="content-area">
+            <!-- Экран изучения -->
+            <section id="learnMode" class="mode-content active">
+                <div class="mode-header">
+                    <h2><i class="fas fa-book-open"></i> Изучение новых слов</h2>
+                    <p>Начните изучение с новых слов. Карточки показываются в случайном порядке.</p>
+                </div>
+                
+                <div class="flashcard-container">
+                    <div class="card-counter">
+                        <span id="currentCard">1</span> / <span id="totalCards">150</span>
+                    </div>
+                    
+                    <div class="flashcard" id="flashcard">
+                        <div class="card-front">
+                            <div class="character-large" id="currentCharacter">爱</div>
+                            <div class="pinyin-large" id="currentPinyin">ài</div>
+                            <div class="hint">Нажмите или нажмите кнопку, чтобы увидеть перевод</div>
+                        </div>
+                        <div class="card-back">
+                            <div class="character-large" id="backCharacter">爱</div>
+                            <div class="pinyin-large" id="backPinyin">ài</div>
+                            <div class="translation" id="currentTranslation">любить; любовь; любимый</div>
+                            <div class="example" id="currentExample">爱祖国 [ài zǔguó] — любить родину</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-controls">
+                        <button id="prevCard" class="btn btn-control">
+                            <i class="fas fa-chevron-left"></i> Назад
+                        </button>
+                        
+                        <div class="middle-controls">
+                            <button id="flipCard" class="btn btn-primary">
+                                <i class="fas fa-sync-alt"></i> Перевернуть
+                            </button>
+                            <button id="markLearned" class="btn btn-success">
+                                <i class="fas fa-check"></i> Изучено
+                            </button>
+                        </div>
+                        
+                        <button id="nextCard" class="btn btn-control">
+                            Вперед <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="shuffle-control">
+                        <button id="shuffleCards" class="btn btn-secondary">
+                            <i class="fas fa-random"></i> Перемешать карточки
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Экран повторения -->
+            <section id="reviewMode" class="mode-content">
+                <div class="mode-header">
+                    <h2><i class="fas fa-sync-alt"></i> Повторение изученных слов</h2>
+                    <p>Повторите слова, которые вы уже изучили. Сосредоточьтесь на закреплении.</p>
+                </div>
+                
+                <div class="review-container" id="reviewContainer">
+                    <!-- Динамически заполнится словами для повторения -->
+                </div>
+            </section>
+
+            <!-- Экран тестирования -->
+            <section id="testMode" class="mode-content">
+                <div class="mode-header">
+                    <h2><i class="fas fa-pencil-alt"></i> Проверка знаний</h2>
+                    <p>Проверьте, насколько хорошо вы запомнили слова из HSK 1.</p>
+                </div>
+                
+                <div class="test-container">
+                    <div class="test-options">
+                        <div class="option-group">
+                            <h3>Тип теста:</h3>
+                            <label class="radio-label">
+                                <input type="radio" name="testType" value="charToTranslation" checked>
+                                <span class="radio-custom"></span>
+                                Иероглиф → Перевод
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="testType" value="pinyinToChar">
+                                <span class="radio-custom"></span>
+                                Пиньинь → Иероглиф
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="testType" value="translationToChar">
+                                <span class="radio-custom"></span>
+                                Перевод → Иероглиф
+                            </label>
+                        </div>
+                        
+                        <div class="option-group">
+                            <h3>Количество вопросов:</h3>
+                            <select id="questionCount" class="select-input">
+                                <option value="10">10</option>
+                                <option value="20" selected>20</option>
+                                <option value="30">30</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        
+                        <button id="startTest" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Начать тест
+                        </button>
+                    </div>
+                    
+                    <div class="test-area hidden" id="testArea">
+                        <div class="test-header">
+                            <div class="test-progress">
+                                <div class="test-progress-bar">
+                                    <div class="test-progress-fill" id="testProgressFill"></div>
+                                </div>
+                                <span id="testProgressText">Вопрос 1/20</span>
+                            </div>
+                            <div class="test-score">
+                                Правильно: <span id="correctCount">0</span> / <span id="totalQuestions">20</span>
+                            </div>
+                        </div>
+                        
+                        <div class="test-question" id="testQuestion">
+                            <!-- Вопрос будет вставлен сюда -->
+                        </div>
+                        
+                        <div class="test-answers" id="testAnswers">
+                            <!-- Варианты ответов будут вставлены сюда -->
+                        </div>
+                        
+                        <div class="test-feedback hidden" id="testFeedback">
+                            <!-- Обратная связь будет вставлена сюда -->
+                        </div>
+                        
+                        <div class="test-controls">
+                            <button id="nextQuestion" class="btn btn-primary hidden">
+                                Следующий вопрос <i class="fas fa-arrow-right"></i>
+                            </button>
+                            <button id="finishTest" class="btn btn-secondary hidden">
+                                Завершить тест
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="test-results hidden" id="testResults">
+                        <!-- Результаты теста будут вставлены сюда -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Экран всех слов -->
+            <section id="allMode" class="mode-content">
+                <div class="mode-header">
+                    <h2><i class="fas fa-list"></i> Все слова HSK 1</h2>
+                    <p>Полный список из 150 слов для подготовки к экзамену.</p>
+                </div>
+                
+                <div class="filter-controls">
+                    <input type="text" id="wordSearch" placeholder="Поиск по иероглифу, пиньиню или переводу..." class="search-input">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">Все</button>
+                        <button class="filter-btn" data-filter="learned">Изученные</button>
+                        <button class="filter-btn" data-filter="new">Новые</button>
+                    </div>
+                </div>
+                
+                <div class="words-grid" id="wordsGrid">
+                    <!-- Все слова будут вставлены сюда -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Подвал -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <p>HSK 1 содержит 150 самых основных китайских слов</p>
+                    <p class="footer-note">Используйте это приложение для подготовки к экзамену HSK 1</p>
+                </div>
+                <div class="footer-links">
+                    <a href="#" id="exportData" class="footer-link">
+                        <i class="fas fa-download"></i> Экспорт прогресса
+                    </a>
+                    <a href="#" id="importData" class="footer-link">
+                        <i class="fas fa-upload"></i> Импорт прогресса
+                    </a>
+                </div>
+            </div>
+            <div class="footer-copyright">
+                <p>© 2023 Изучение китайского языка | 学中文</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Модальное окно для импорта/экспорта -->
+    <div class="modal hidden" id="dataModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Экспорт прогресса</h3>
+            <textarea id="dataTextarea" rows="10" placeholder="Данные будут отображены здесь..."></textarea>
+            <div class="modal-buttons">
+                <button id="closeModal" class="btn btn-secondary">Закрыть</button>
+                <button id="copyData" class="btn btn-primary">Копировать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Скрипты -->
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
