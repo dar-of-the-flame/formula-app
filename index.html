@@ -50,7 +50,12 @@
             <div class="header-controls">
                 <!-- Кнопка настроек -->
                 <button id="settingsBtn" class="btn btn-settings">
-                    <i class="fas fa-cog"></i> <span data-i18n="settings">Настройки</span>
+                    <i class="fas fa-cog"></i>
+                </button>
+                
+                <!-- Кнопка установки PWA (будет показана при поддержке) -->
+                <button id="installBtn" class="btn btn-install hidden">
+                    <i class="fas fa-download"></i>
                 </button>
                 
                 <div class="level-selector">
@@ -104,16 +109,19 @@
                 </div>
                 
                 <div class="flashcard-container">
-                    <!-- Счетчик карточек убран, оставлен только уровень -->
                     <div class="current-level-display">
                         <span class="level-badge" id="currentLevelBadge">HSK 1</span>
-                        <span class="hint" data-i18n="cardHint">Кликните или нажмите пробел для переворота</span>
+                        <span class="hint" data-i18n="cardHint">Кликните на карточку для переворота</span>
                     </div>
                     
                     <div class="flashcard" id="flashcard">
                         <div class="card-front">
                             <div class="character-large" id="currentCharacter">爱</div>
                             <div class="pinyin-large" id="currentPinyin">ài</div>
+                            <div class="hint-flip">
+                                <i class="fas fa-sync-alt"></i>
+                                <span>Кликните, чтобы перевернуть</span>
+                            </div>
                         </div>
                         <div class="card-back">
                             <div class="character-large" id="backCharacter">爱</div>
@@ -125,21 +133,18 @@
                     </div>
                     
                     <div class="card-controls">
-                        <button id="prevCard" class="btn btn-control">
-                            <i class="fas fa-chevron-left"></i> <span data-i18n="prev">Назад</span>
+                        <button id="prevCard" class="btn btn-control" title="Предыдущая карточка">
+                            <i class="fas fa-chevron-left"></i>
                         </button>
                         
                         <div class="middle-controls">
-                            <button id="flipCard" class="btn btn-primary">
-                                <i class="fas fa-sync-alt"></i> <span data-i18n="flip">Перевернуть</span>
-                            </button>
-                            <button id="markLearned" class="btn btn-success">
-                                <i class="fas fa-check"></i> <span data-i18n="learned">Выучено</span>
+                            <button id="markLearned" class="btn btn-success" title="Отметить как выученное">
+                                <i class="fas fa-check"></i>
                             </button>
                         </div>
                         
-                        <button id="nextCard" class="btn btn-control">
-                            <span data-i18n="next">Вперед</span> <i class="fas fa-chevron-right"></i>
+                        <button id="nextCard" class="btn btn-control" title="Следующая карточка">
+                            <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
                     
@@ -436,51 +441,6 @@
         // Проверяем структуру данных
         console.log('Первое слово:', hskWords[0]);
         console.log('Последнее слово:', hskWords[hskWords.length - 1]);
-        
-        // Проверяем поддержку Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(function(registration) {
-                        console.log('Service Worker зарегистрирован:', registration.scope);
-                        
-                        // Проверяем обновления Service Worker
-                        registration.addEventListener('updatefound', () => {
-                            const newWorker = registration.installing;
-                            console.log('Обнаружено обновление Service Worker');
-                            
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    console.log('Новая версия приложения доступна!');
-                                    // Можно показать уведомление пользователю
-                                    if (confirm('Доступна новая версия приложения. Обновить?')) {
-                                        window.location.reload();
-                                    }
-                                }
-                            });
-                        });
-                    })
-                    .catch(function(error) {
-                        console.log('Ошибка регистрации Service Worker:', error);
-                    });
-            });
-        }
-        
-        // Проверяем онлайн/офлайн статус
-        window.addEventListener('online', () => {
-            document.getElementById('offlineNotification').classList.add('hidden');
-            console.log('Вы онлайн');
-        });
-        
-        window.addEventListener('offline', () => {
-            document.getElementById('offlineNotification').classList.remove('hidden');
-            console.log('Вы офлайн');
-        });
-        
-        // Инициализируем статус
-        if (!navigator.onLine) {
-            document.getElementById('offlineNotification').classList.remove('hidden');
-        }
     </script>
     <script src="script.js"></script>
 </body>
